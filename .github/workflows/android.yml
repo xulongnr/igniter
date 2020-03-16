@@ -2,7 +2,7 @@ name: Android CI
 
 on:
   push:
-      branches: xulongnr-patch-1
+      branches: [ master, xulongnr-patch-1 ]
 #  pull_request:
 #    branches: [ master ]
 

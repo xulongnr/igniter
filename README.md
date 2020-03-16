@@ -1,6 +1,6 @@
 # igniter
 
-![](https://github.com/xulongnr/igniter/.github/workflows/android.yml/badge.svg?branch=xulongnr-patch-1)
+![](https://github.com/actions/xulongnr/igniter/.github/workflows/android.yml/badge.svg)
 
 A trojan client for Android.
 

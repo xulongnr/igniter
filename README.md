@@ -1,8 +1,10 @@
 # igniter
 
-[![CircleCI](https://circleci.com/gh/trojan-gfw/igniter/tree/master.svg?style=svg)](https://circleci.com/gh/trojan-gfw/igniter/tree/master)
+![](https://github.com/xulongnr/igniter/.github/workflows/android.yml/badge.svg?branch=xulongnr-patch-1)
 
 A trojan client for Android.
+
+[![CircleCI](https://circleci.com/gh/trojan-gfw/igniter/tree/master.svg?style=svg)](https://circleci.com/gh/trojan-gfw/igniter/tree/master)
 
 ## Thanks
 

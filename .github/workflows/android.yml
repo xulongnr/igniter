@@ -3,6 +3,7 @@ name: Android CI
 on:
   push:
       branches: [ master, xulongnr-patch-1 ]
+
 #  pull_request:
 #    branches: [ master ]
 
@@ -12,17 +13,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: set up JDK 1.8
-      uses: actions/setup-java@v1
+    - uses: actions/checkout@v1
+    - name: checkout submodule
+      run: git submodule sync --recursive && git submodule update --init --recursive
+
+    - name: before build
+      uses: xdtianyu/actions-android-ci@master
       with:
-        java-version: 1.8
-    - name: ndk
-      uses: actions/android-ndk-toolchain-setup@v0.1
+        args: '"
+        source .travis/env.sh;
+        touch local.properties
+        "'
+
+    - name: build
+      uses: xdtianyu/actions-android-ci@master
       with: 
-        api: '21'
-        arch: 'arm'
-        install-location: 'toolchains'
-        force: true  
-    - name: Build with Gradle
-      run: ./gradlew assembleRelease
+        args: '"
+        source .travis/env.sh;
+        source /opt/setup-android-sdk.sh;
+        ./gradlew assembleDebug
+        "'
+
+#    - name: Build with Gradle
+#      run: ./gradlew assembleRelease

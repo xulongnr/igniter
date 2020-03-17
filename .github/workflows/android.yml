@@ -29,7 +29,7 @@ jobs:
     - name: docker
       run: |
          sudo chown -R 3434:3434 .
-         docker run --rm -v ${PWD}:/home/circleci/src circleci/android:api-28-ndk bash -c "cd /home/circleci/src; \
+         docker run --rm -v ${PWD}:/home/circleci/src circleci/android:api-29-ndk bash -c "cd /home/circleci/src; \
             ./gradlew assembleDebug;
             ./gradlew assembleRelease"
          ls -l build/app/build/outputs/apk/{debug,release}

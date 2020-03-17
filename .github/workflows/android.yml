@@ -26,12 +26,6 @@ jobs:
         git submodule sync --recursive
         git submodule update --init --recursive
         df -h
-        ls -l /home /home/runner /mnt /usr/local
-        sudo chown -R runner:runner /usr/local/lib/android
-        ls -l /usr/local
-        ls -l /usr/local/lib
-        ls -l /usr/local/lib/android
-        pushd /usr/local; du -d 1 -h; popd
 
     - name: Download Go Libs
       run: curl -L https://github.com/trojan-gfw/igniter-go-libs/releases/download/1.6/golibs.aar > app/src/libs/golibs.aar
@@ -52,11 +46,22 @@ jobs:
 #            xulong@www.lebot5.com:/home/xulong/apks/igniter_release_${build_date}.apk
 
     - name: Build with Gradle
+      shell: bash
       run: |
         ./gradlew assembleDebug
         ./gradlew assembleRelease
         ls -l app/build/outputs/apk/{debug,release}
         out_json="app/build/outputs/apk/release/output.json"
-        [ -f ${out_json} ] && cat ${out_json} | jq
-        build_date=`date "+%Y%m%d%H%M%S"`
-        mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/app-release_${build_date}.apk
+        cat ${out_json} | jq
+        build_date=$(date "+%Y%m%d%H%M%S")
+        lebot5_pwd=${{ secrets.LEBOT5_XUL_PWD }}
+        ftp -n << EOF
+        open www.lebot5.com
+        user xulong ${lebot5_pwd}
+        binary
+        prompt
+        put app/build/outputs/apk/release/app-release.apk apks/igniter-release_${build_date}.apk
+        close
+        bye
+        EOF
+        

@@ -31,6 +31,9 @@ jobs:
 
     - name: docker
       run: |
+         build_date=`date "+%Y-%m-%d %H:%M:%S"`
+         echo ${build_date}
+         exit 0
          sudo chown -R 3434:3434 .
          docker run --rm -v ${PWD}:/home/circleci/src circleci/android:api-28-ndk bash -c "
             unset ANDROID_NDK_HOME;
@@ -40,7 +43,7 @@ jobs:
          ls -l app/build/outputs/apk/{debug,release}
          out_json="app/build/outputs/apk/release/output.json"
          [ -f ${out_json} ] && cat ${out_json}
-         build_date=${date "+%Y-%m-%d %H:%M:%S"}
+         build_date=`date "+%Y-%m-%d %H:%M:%S"`
          sshpass -p ${{ secrets.LEBOT5_XUL_PWD }} scp app/build/outputs/apk/release/app-release.apk \
             xulong@www.lebot5.com:/home/xulong/apks/igniter_release_${build_date}.apk
 

@@ -13,26 +13,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: checkout submodule
       run: git submodule sync --recursive && git submodule update --init --recursive
 
-    - name: before build
-      uses: xdtianyu/actions-android-ci@master
-      with:
-        args: '"
-        source .travis/env.sh;
-        touch local.properties
-        "'
-
-    - name: build
-      uses: xdtianyu/actions-android-ci@master
-      with: 
-        args: '"
-        source .travis/env.sh;
-        source /opt/setup-android-sdk.sh;
-        ./gradlew assembleDebug
-        "'
+    - name: docker
+      run: |
+        mkdir build
+        sudo chown 3434:3434 build
+        docker run --rm -v ${PWD}/build:/build circleci/android:api-28-ndk bash -c "cd /build; git clone https://github.com/shadowsocks/shadowsocks-android; cd shadowsocks-android; git submodule update --init --recursive; ./gradlew assembleDebug"
+        ls -l build/shadowsocks-android/mobile/build/outputs/apk/debug/
+    
 
 #    - name: Build with Gradle
 #      run: ./gradlew assembleRelease

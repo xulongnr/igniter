@@ -54,7 +54,7 @@ jobs:
         cp app/build/outputs/apk/release/app-release.apk /mnt/igniter-release_${build_date}.apk
         ls -l /mnt
         lebot5_pwd=${{ secrets.LEBOT5_XUL_PWD }}
-        ftp www.lebot5.com -n << EOF
+        ftp www.lebot5.com 21 << EOF
           user xulong ${lebot5_pwd}
           binary
           cd apks

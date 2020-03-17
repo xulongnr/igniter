@@ -45,4 +45,6 @@ jobs:
 #            xulong@www.lebot5.com:/home/xulong/apks/igniter_release_${build_date}.apk
 
     - name: Build with Gradle
-      run: ./gradlew assembleRelease
+      run: |
+        sudo chown -R runner:runner /usr/local/lib/android/sdk
+        ./gradlew assembleRelease

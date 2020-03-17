@@ -25,6 +25,8 @@ jobs:
       run: |
         git submodule sync --recursive
         git submodule update --init --recursive
+        df -h
+        ls -l /
 
     - name: Download Go Libs
       run: curl -L https://github.com/trojan-gfw/igniter-go-libs/releases/download/1.6/golibs.aar > app/src/libs/golibs.aar

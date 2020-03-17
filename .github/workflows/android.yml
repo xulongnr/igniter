@@ -30,10 +30,11 @@ jobs:
       run: |
          sudo chown -R 3434:3434 .
          docker run --rm -v ${PWD}:/home/circleci/src circleci/android:api-28-ndk bash -c "
-            cd /opt/android;
-            curl -O https://dl.google.com/android/repository/android-ndk-r21-linux-x86_64.zip;
-            unzip android-ndk-r21-linux-x86_64.zip;
-            export ANDROID_NDK_HOME=/opt/android/android-ndk-r21;
+            #cd /opt/android;
+            #sudo curl -O https://dl.google.com/android/repository/android-ndk-r21-linux-x86_64.zip;
+            #sudo unzip android-ndk-r21-linux-x86_64.zip;
+            #export ANDROID_NDK_HOME=/opt/android/android-ndk-r21;
+            unset ANDROID_NDK_HOME;
             cd /home/circleci/src;
             ./gradlew assembleDebug;
             ./gradlew assembleRelease"

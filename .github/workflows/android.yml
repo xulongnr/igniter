@@ -1,0 +1,69 @@
+name: Android CI
+
+on:
+  push:
+      branches: [ master ]
+      tags: [ v* ]
+      paths:
+        - 'app/src/*'
+
+  schedule:
+      - cron: 0 0 * * 5 # Every Friday
+
+#  pull_request:
+#    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Checkout submodule
+      run: |
+        git submodule sync --recursive
+        git submodule update --init --recursive
+        sudo chown -R runner /usr/local/lib/android
+        df -h
+
+    - name: Download Go Libs
+      run: curl -L https://github.com/trojan-gfw/igniter-go-libs/releases/download/1.6/golibs.aar > app/src/libs/golibs.aar
+
+#    - name: Build in Docker
+#      run: |
+#         sudo chown -R 3434:3434 .
+#         docker run --rm -v ${PWD}:/home/circleci/src circleci/android:api-28-ndk bash -c "
+#            unset ANDROID_NDK_HOME;
+#            cd /home/circleci/src;
+#            ./gradlew assembleDebug;
+#            ./gradlew assembleRelease"
+#         ls -l app/build/outputs/apk/{debug,release}
+#         out_json="app/build/outputs/apk/release/output.json"
+#         [ -f ${out_json} ] && cat ${out_json} | jq
+#         build_date=`date "+%Y%m%d%H%M%S"`
+#         sshpass -p ${{ secrets.LEBOT5_XUL_PWD }} scp app/build/outputs/apk/release/app-release.apk \
+#            xulong@www.lebot5.com:/home/xulong/apks/igniter_release_${build_date}.apk
+
+    - name: Build with Gradle
+      run: |
+        ./gradlew assembleDebug
+        ./gradlew assembleRelease
+        ls -l app/build/outputs/apk/{debug,release}
+        out_json="app/build/outputs/apk/release/output.json"
+        build_date=`TZ=Asia/Shanghai date "+%Y%m%d%H%M"`
+        sudo cp app/build/outputs/apk/release/app-release.apk /mnt/igniter-release_${build_date}.apk
+        ls -lh /mnt
+        lebot5_pwd=${{ secrets.LEBOT5_XUL_PWD }}
+        ftp -npv <<EOF
+          open www.lebot5.com
+          user xulong ${lebot5_pwd}
+          binary
+          cd /var/ftp/pub/apks
+          lcd app/build/outputs/apk/release
+          prompt
+          put app-release.apk igniter-release_${build_date}.apk
+          close
+          bye
+        EOF
+
+      shell: bash

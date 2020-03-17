@@ -3,11 +3,18 @@ name: Android CI
 on:
   push:
       branches: [ master, xulongnr-patch-1 ]
+      tags: []
+      paths:
+        - 'app/src/*'
+
+  schedule:
+      - cron: 0 0 * * 5 # Every Friday
 
 #  pull_request:
 #    branches: [ master ]
 
 jobs:
+  
   build:
 
     runs-on: ubuntu-latest
@@ -15,14 +22,18 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: checkout submodule
-      run: git submodule sync --recursive && git submodule update --init --recursive
-
-    - name: docker
       run: |
-        mkdir build
-        sudo chown 3434:3434 build
-        docker run --rm -v ${PWD}/build:/build circleci/android:api-28-ndk bash -c "cd /build; git clone https://github.com/shadowsocks/shadowsocks-android; cd shadowsocks-android; git submodule update --init --recursive; ./gradlew assembleDebug"
-        ls -l build/shadowsocks-android/mobile/build/outputs/apk/debug/
+        git submodule sync --recursive
+        git submodule update --init --recursive
+        pwd
+        ls
+
+#     - name: docker
+#       run: |
+#         mkdir build
+#         sudo chown 3434:3434 build
+#         docker run --rm -v ${PWD}/build:/build circleci/android:api-28-ndk bash -c "cd /build; git clone https://github.com/shadowsocks/shadowsocks-android; cd shadowsocks-android; git submodule update --init --recursive; ./gradlew assembleDebug"
+#         ls -l build/shadowsocks-android/mobile/build/outputs/apk/debug/
     
 
 #    - name: Build with Gradle

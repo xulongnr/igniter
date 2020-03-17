@@ -1,7 +1,6 @@
 # igniter
 
-![Android CI](https://github.com/xulongnr/igniter/workflows/Android%20CI/badge.svg)
-![Android CI](https://github.com/xulongnr/igniter/.github/workflows/android.yml/badge.svg)
+[![Android CI](https://github.com/xulongnr/igniter/workflows/Android%20CI/badge.svg)](https://github.com/xulongnr/igniter/actions)
 
 A trojan client for Android.
 

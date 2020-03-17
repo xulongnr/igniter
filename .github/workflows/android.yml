@@ -25,6 +25,7 @@ jobs:
       run: |
         git submodule sync --recursive
         git submodule update --init --recursive
+        sudo chown -R runner /usr/local/lib/android
         df -h
 
     - name: Download Go Libs

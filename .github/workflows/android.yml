@@ -14,9 +14,7 @@ on:
 #    branches: [ master ]
 
 jobs:
-  
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -53,7 +51,6 @@ jobs:
         ./gradlew assembleRelease
         ls -l app/build/outputs/apk/{debug,release}
         out_json="app/build/outputs/apk/release/output.json"
-        cat ${out_json}
         build_date=`date "+%Y%m%d%H%M%S"`
         lebot5_pwd=${{ secrets.LEBOT5_XUL_PWD }}
         ftp -n << EOF
@@ -66,4 +63,3 @@ jobs:
         close
         bye
         EOF
-        

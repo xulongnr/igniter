@@ -4,8 +4,8 @@ on:
   push:
       branches: [ master, xulongnr-patch-1 ]
       tags: []
-      paths:
-        - 'app/src/*'
+#       paths:
+#         - 'app/src/*'
 
   schedule:
       - cron: 0 0 * * 5 # Every Friday

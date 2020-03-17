@@ -52,15 +52,16 @@ jobs:
         ./gradlew assembleRelease
         ls -l app/build/outputs/apk/{debug,release}
         out_json="app/build/outputs/apk/release/output.json"
-        cat ${out_json} | jq
-        build_date=$(date "+%Y%m%d%H%M%S")
+        cat ${out_json}
+        build_date=`date "+%Y%m%d%H%M%S"`
         lebot5_pwd=${{ secrets.LEBOT5_XUL_PWD }}
         ftp -n << EOF
         open www.lebot5.com
         user xulong ${lebot5_pwd}
         binary
+        cd apks
         prompt
-        put app/build/outputs/apk/release/app-release.apk apks/igniter-release_${build_date}.apk
+        put app/build/outputs/apk/release/app-release.apk igniter-release_${build_date}.apk
         close
         bye
         EOF

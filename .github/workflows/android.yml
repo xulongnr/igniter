@@ -41,7 +41,7 @@ jobs:
             cd /home/circleci/src;
             ./gradlew assembleDebug;
             ./gradlew assembleRelease"
-         ls -l build/app/build/outputs/apk/{debug,release}
+         ls -l app/build/outputs/apk/{debug,release}
          ls -l /opt/android/sdk/ndk
 
 #    - name: Build with Gradle

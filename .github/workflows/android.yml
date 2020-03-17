@@ -26,6 +26,9 @@ jobs:
         git submodule sync --recursive
         git submodule update --init --recursive
 
+    - name: Download Go Libs
+      run: curl -L https://github.com/trojan-gfw/igniter-go-libs/releases/download/1.6/golibs.aar > app/src/libs/golibs.aar
+
     - name: docker
       run: |
          sudo chown -R 3434:3434 .
@@ -39,6 +42,7 @@ jobs:
             ./gradlew assembleDebug;
             ./gradlew assembleRelease"
          ls -l build/app/build/outputs/apk/{debug,release}
+         ls -l /opt/android/sdk/ndk
 
 #    - name: Build with Gradle
 #      run: ./gradlew assembleRelease

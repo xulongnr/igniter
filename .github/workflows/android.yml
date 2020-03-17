@@ -52,9 +52,9 @@ jobs:
         out_json="app/build/outputs/apk/release/output.json"
         build_date=`date "+%Y%m%d%H%M%S"`
         sudo cp app/build/outputs/apk/release/app-release.apk /mnt/igniter-release_${build_date}.apk
-        ls -l /mnt
+        ls -lh /mnt
         lebot5_pwd=${{ secrets.LEBOT5_XUL_PWD }}
-        ftp -n<<EOF
+        ftp -npv <<EOF
           open www.lebot5.com
           user xulong ${lebot5_pwd}
           binary

@@ -25,16 +25,14 @@ jobs:
       run: |
         git submodule sync --recursive
         git submodule update --init --recursive
-        pwd
-        ls
 
-#     - name: docker
-#       run: |
-#         mkdir build
-#         sudo chown 3434:3434 build
-#         docker run --rm -v ${PWD}/build:/build circleci/android:api-28-ndk bash -c "cd /build; git clone https://github.com/shadowsocks/shadowsocks-android; cd shadowsocks-android; git submodule update --init --recursive; ./gradlew assembleDebug"
-#         ls -l build/shadowsocks-android/mobile/build/outputs/apk/debug/
-    
+    - name: docker
+      run: |
+         sudo chown -R 3434:3434 .
+         docker run --rm -v ${PWD}:/home/circleci/src circleci/android:api-28-ndk bash -c "cd /home/circleci/src; \
+            ./gradlew assembleDebug;
+            ./gradlew assembleRelease"
+         ls -l build/app/build/outputs/apk/{debug,release}
 
 #    - name: Build with Gradle
 #      run: ./gradlew assembleRelease

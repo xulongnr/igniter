@@ -26,7 +26,12 @@ jobs:
         git submodule sync --recursive
         git submodule update --init --recursive
         df -h
-        ls -l /
+        ls -l /home /home/runner /mnt /usr/local
+        sudo chown -R runner:runner /usr/local/lib/android
+        ls -l /usr/local
+        ls -l /usr/local/lib
+        ls -l /usr/local/lib/android
+        pushd /usr/local; du -d 1 -h; popd
 
     - name: Download Go Libs
       run: curl -L https://github.com/trojan-gfw/igniter-go-libs/releases/download/1.6/golibs.aar > app/src/libs/golibs.aar
@@ -48,5 +53,10 @@ jobs:
 
     - name: Build with Gradle
       run: |
-        sudo chown -R runner:runner /usr/local/lib/android/sdk
+        ./gradlew assembleDebug
         ./gradlew assembleRelease
+        ls -l app/build/outputs/apk/{debug,release}
+        out_json="app/build/outputs/apk/release/output.json"
+        [ -f ${out_json} ] && cat ${out_json} | jq
+        build_date=`date "+%Y%m%d%H%M%S"`
+        mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/app-release_${build_date}.apk

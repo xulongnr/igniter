@@ -45,7 +45,6 @@ jobs:
 #            xulong@www.lebot5.com:/home/xulong/apks/igniter_release_${build_date}.apk
 
     - name: Build with Gradle
-      shell: bash
       run: |
         ./gradlew assembleDebug
         ./gradlew assembleRelease
@@ -53,13 +52,14 @@ jobs:
         out_json="app/build/outputs/apk/release/output.json"
         build_date=`date "+%Y%m%d%H%M%S"`
         lebot5_pwd=${{ secrets.LEBOT5_XUL_PWD }}
-        ftp -n << EOF
-        open www.lebot5.com
-        user xulong ${lebot5_pwd}
-        binary
-        cd apks
-        prompt
-        put app/build/outputs/apk/release/app-release.apk igniter-release_${build_date}.apk
-        close
-        bye
+        ftp www.lebot5.com -n << EOF
+          user xulong ${lebot5_pwd}
+          binary
+          cd apks
+          prompt
+          put app/build/outputs/apk/release/app-release.apk igniter-release_${build_date}.apk
+          close
+          bye
         EOF
+
+      shell: bash

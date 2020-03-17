@@ -21,7 +21,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: checkout submodule
+    - name: Checkout submodule
       run: |
         git submodule sync --recursive
         git submodule update --init --recursive
@@ -29,20 +29,20 @@ jobs:
     - name: Download Go Libs
       run: curl -L https://github.com/trojan-gfw/igniter-go-libs/releases/download/1.6/golibs.aar > app/src/libs/golibs.aar
 
-    - name: docker
-      run: |
-         sudo chown -R 3434:3434 .
-         docker run --rm -v ${PWD}:/home/circleci/src circleci/android:api-28-ndk bash -c "
-            unset ANDROID_NDK_HOME;
-            cd /home/circleci/src;
-            ./gradlew assembleDebug;
-            ./gradlew assembleRelease"
-         ls -l app/build/outputs/apk/{debug,release}
-         out_json="app/build/outputs/apk/release/output.json"
-         [ -f ${out_json} ] && cat ${out_json}
-         build_date=`date "+%Y%m%d%H%M%S"`
-         sshpass -p ${{ secrets.LEBOT5_XUL_PWD }} scp app/build/outputs/apk/release/app-release.apk \
-            xulong@www.lebot5.com:/home/xulong/apks/igniter_release_${build_date}.apk
+#    - name: Build in Docker
+#      run: |
+#         sudo chown -R 3434:3434 .
+#         docker run --rm -v ${PWD}:/home/circleci/src circleci/android:api-28-ndk bash -c "
+#            unset ANDROID_NDK_HOME;
+#            cd /home/circleci/src;
+#            ./gradlew assembleDebug;
+#            ./gradlew assembleRelease"
+#         ls -l app/build/outputs/apk/{debug,release}
+#         out_json="app/build/outputs/apk/release/output.json"
+#         [ -f ${out_json} ] && cat ${out_json} | jq
+#         build_date=`date "+%Y%m%d%H%M%S"`
+#         sshpass -p ${{ secrets.LEBOT5_XUL_PWD }} scp app/build/outputs/apk/release/app-release.apk \
+#            xulong@www.lebot5.com:/home/xulong/apks/igniter_release_${build_date}.apk
 
-#    - name: Build with Gradle
-#      run: ./gradlew assembleRelease
+    - name: Build with Gradle
+      run: ./gradlew assembleRelease

@@ -54,13 +54,14 @@ jobs:
         sudo cp app/build/outputs/apk/release/app-release.apk /mnt/igniter-release_${build_date}.apk
         ls -l /mnt
         lebot5_pwd=${{ secrets.LEBOT5_XUL_PWD }}
-        ftp -n -v << EOF
+        ftp -n<<EOF
           open www.lebot5.com
           user xulong ${lebot5_pwd}
           binary
-          cd apks
+          cd /var/ftp/pub/apks
+          lcd app/build/outputs/apk/release
           prompt
-          put app/build/outputs/apk/release/app-release.apk igniter-release_${build_date}.apk
+          put app-release.apk igniter-release_${build_date}.apk
           close
           bye
         EOF

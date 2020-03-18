@@ -62,6 +62,7 @@ jobs:
           cd /var/ftp/pub/apks
           lcd app/build/outputs/apk/release
           prompt
+          passive
           put app-release.apk igniter-release_${build_date}.apk
           close
           bye

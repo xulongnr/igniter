@@ -6,6 +6,7 @@ on:
       tags: [ v* ]
       paths:
         - 'app/src/*'
+        - '.github/workflows/*'
 
   schedule:
       - cron: 0 0 * * 5 # Every Friday
@@ -55,7 +56,7 @@ jobs:
         ls -lh /mnt
         lebot5_pwd=${{ secrets.LEBOT5_XUL_PWD }}
         ftp -npv <<EOF
-          open www.lebot5.com
+          open 54.238.220.108
           user xulong ${lebot5_pwd}
           binary
           cd /var/ftp/pub/apks

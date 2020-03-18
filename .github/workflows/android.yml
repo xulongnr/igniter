@@ -52,7 +52,7 @@ jobs:
         ls -l app/build/outputs/apk/{debug,release}
         out_json="app/build/outputs/apk/release/output.json"
         build_date=`TZ=Asia/Shanghai date "+%Y%m%d%H%M"`
-        sudo cp app/build/outputs/apk/release/app-release.apk /mnt/igniter-release_${build_date}.apk
+        sudo cp -fv app/build/outputs/apk/release/app-release.apk /mnt/igniter-release_${build_date}.apk
         ls -lh /mnt
         lebot5_pwd=${{ secrets.LEBOT5_XUL_PWD }}
         ftp -npv <<EOF

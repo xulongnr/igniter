@@ -23,7 +23,8 @@ jobs:
     - name: Build project
       run: |
         ./gradlew assembleRelease
-        cp app/build/outputs/apk/release/app-release.apk igniter_${{ github.ref }}.apk
+        build_date=`TZ=Asia/Shanghai date "+%Y%m%d%H%M"`
+        cp app/build/outputs/apk/release/app-release.apk igniter_${build_date}.apk
 
     - name: Create Release
       id: create_release
@@ -43,5 +44,5 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./igniter_${{ github.ref }}.apk
-        asset_name: igniter_${{ github.ref }}.apk
+        asset_path: ./igniter_${build_date}.apk
+        asset_name: igniter_${{github.ref.tag_name}}.apk

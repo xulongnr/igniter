@@ -3,10 +3,8 @@ name: Android CI
 on:
   push:
       branches: [ master ]
-      tags: [ v* ]
       paths:
         - 'app/src/*'
-        - '.github/workflows/*'
 
   schedule:
       - cron: 0 0 * * 5 # Every Friday
@@ -54,17 +52,17 @@ jobs:
         build_date=`TZ=Asia/Shanghai date "+%Y%m%d%H%M"`
         sudo cp -fv app/build/outputs/apk/release/app-release.apk /mnt/igniter-release_${build_date}.apk
         ls -lh /mnt
-        lebot5_pwd=${{ secrets.LEBOT5_XUL_PWD }}
-        ftp -npv <<EOF
-          open trj.v2rxulind.tk
-          user xulong ${lebot5_pwd}
-          binary
-          cd /var/ftp/pub/apks
-          lcd app/build/outputs/apk/release
-          prompt
-          put app-release.apk igniter-release_${build_date}.apk
-          close
-          bye
-        EOF
+#        lebot5_pwd=${{ secrets.LEBOT5_XUL_PWD }}
+#        ftp -npv <<EOF
+#          open trj.v2rxulind.tk
+#          user xulong ${lebot5_pwd}
+#          binary
+#          cd /var/ftp/pub/apks
+#          lcd app/build/outputs/apk/release
+#          prompt
+#          put app-release.apk igniter-release_${build_date}.apk
+#          close
+#          bye
+#        EOF
 
       shell: bash

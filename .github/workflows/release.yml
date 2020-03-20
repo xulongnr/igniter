@@ -20,11 +20,14 @@ jobs:
     - name: Download Go Libs
       run: curl -L https://github.com/trojan-gfw/igniter-go-libs/releases/download/1.6/golibs.aar > app/src/libs/golibs.aar
 
+    - name: Get the version
+      id: get_version
+      run: echo ::set-output name=VERSION::$(echo $GITHUB_REF | cut -d / -f 3)
+
     - name: Build project
       run: |
         ./gradlew assembleRelease
-        build_date=`TZ=Asia/Shanghai date "+%Y%m%d%H%M"`
-        cp app/build/outputs/apk/release/app-release.apk igniter_${build_date}.apk
+        cp app/build/outputs/apk/release/app-release.apk igniter_${{ steps.get_version.outputs.VERSION }}.apk
 
     - name: Create Release
       id: create_release
@@ -44,5 +47,5 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./igniter_${build_date}.apk
-        asset_name: igniter_${{github.ref.tag_name}}.apk
+        asset_path: ./igniter_${{ steps.get_version.outputs.VERSION }}.apk
+        asset_name: igniter_${{ steps.get_version.outputs.VERSION }}.apk

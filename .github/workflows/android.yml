@@ -26,7 +26,7 @@ jobs:
         df -h
 
     - name: Download Go Libs
-      run: curl -L https://github.com/trojan-gfw/igniter-go-libs/releases/download/1.6/golibs.aar > app/src/libs/golibs.aar
+      run: curl -L https://github.com/trojan-gfw/igniter-go-libs/releases/download/1.10/golibs.aar > app/src/libs/golibs.aar
 
 #    - name: Build in Docker
 #      run: |

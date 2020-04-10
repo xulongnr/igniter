@@ -1,12 +1,17 @@
 package io.github.trojan_gfw.igniter;
 
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.VpnService;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.method.LinkMovementMethod;
 import android.view.Menu;
@@ -29,6 +34,7 @@ import java.io.InputStream;
 import io.github.trojan_gfw.igniter.common.os.MultiProcessSP;
 import io.github.trojan_gfw.igniter.common.os.Task;
 import io.github.trojan_gfw.igniter.common.os.Threads;
+import io.github.trojan_gfw.igniter.common.utils.PermissionUtils;
 import io.github.trojan_gfw.igniter.common.utils.SnackbarUtils;
 import io.github.trojan_gfw.igniter.connection.TrojanConnection;
 import io.github.trojan_gfw.igniter.exempt.activity.ExemptAppActivity;
@@ -36,11 +42,13 @@ import io.github.trojan_gfw.igniter.proxy.aidl.ITrojanService;
 import io.github.trojan_gfw.igniter.servers.activity.ServerListActivity;
 import io.github.trojan_gfw.igniter.servers.data.ServerListDataManager;
 import io.github.trojan_gfw.igniter.servers.data.ServerListDataSource;
-import io.github.trojan_gfw.igniter.tile.ProxyControlActivity;
+import io.github.trojan_gfw.igniter.tile.ProxyHelper;
 
 
 public class MainActivity extends AppCompatActivity implements TrojanConnection.Callback {
     private static final String TAG = "MainActivity";
+    private static final int READ_WRITE_EXT_STORAGE_PERMISSION_REQUEST = 514;
+    private static final int VPN_REQUEST_CODE = 233;
     private static final int SERVER_LIST_CHOOSE_REQUEST_CODE = 1024;
     private static final int EXEMPT_APP_CONFIGURE_REQUEST_CODE = 2077;
     private static final String CONNECTION_TEST_URL = "https://www.google.com";
@@ -296,10 +304,15 @@ public class MainActivity extends AppCompatActivity implements TrojanConnection.
                     );
                     TrojanHelper.ShowConfig(Globals.getTrojanConfigPath());
                     // start ProxyService
-                    startActivity(ProxyControlActivity.startOrStopProxy(MainActivity.this, true, true));
+                    Intent i = VpnService.prepare(getApplicationContext());
+                    if (i != null) {
+                        startActivityForResult(i, VPN_REQUEST_CODE);
+                    } else {
+                        ProxyHelper.startProxyService(getApplicationContext());
+                    }
                 } else if (proxyState == ProxyService.STARTED) {
                     // stop ProxyService
-                    startActivity(ProxyControlActivity.startOrStopProxy(MainActivity.this, false, true));
+                    ProxyHelper.stopProxyService(getApplicationContext());
                 }
             }
         });
@@ -323,6 +336,31 @@ public class MainActivity extends AppCompatActivity implements TrojanConnection.
         });
         serverListDataManager = new ServerListDataManager(Globals.getTrojanConfigListPath());
         connection.connect(this, this);
+        if (!PermissionUtils.hasReadWriteExtStoragePermission(this) && ActivityCompat
+                .shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            requestReadWriteExternalStoragePermission();
+        }
+    }
+
+    private void requestReadWriteExternalStoragePermission() {
+        new AlertDialog.Builder(this).setTitle(R.string.common_alert)
+                .setMessage(R.string.main_write_external_storage_permission_requirement)
+                .setPositiveButton(R.string.common_confirm, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{
+                                Manifest.permission.READ_EXTERNAL_STORAGE,
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE
+                        }, READ_WRITE_EXT_STORAGE_PERMISSION_REQUEST);
+                    }
+                })
+                .setNegativeButton(R.string.common_cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                }).show();
     }
 
     @Override
@@ -387,6 +425,7 @@ public class MainActivity extends AppCompatActivity implements TrojanConnection.
         LogHelper.i(TAG, "onBinderDied");
         connection.disconnect(this);
         // connect the new binder
+        // todo is it necessary to re-connect?
         connection.connect(this, this);
     }
 
@@ -404,6 +443,21 @@ public class MainActivity extends AppCompatActivity implements TrojanConnection.
                 service.testConnection(CONNECTION_TEST_URL);
             } catch (RemoteException e) {
                 showTestConnectionResult(CONNECTION_TEST_URL, false, 0L, "Trojan service throws RemoteException.");
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Show develop info in Logcat by invoking {@link ITrojanService#showDevelopInfoInLogcat}. Since {@link ITrojanService}
+     * is from remote process, a {@link RemoteException} might be thrown.
+     */
+    private void showDevelopInfoInLogcat() {
+        ITrojanService service = trojanService;
+        if (service != null) {
+            try {
+                service.showDevelopInfoInLogcat();
+            } catch (RemoteException e) {
                 e.printStackTrace();
             }
         }
@@ -452,6 +506,8 @@ public class MainActivity extends AppCompatActivity implements TrojanConnection.
             if (ProxyService.STARTED == proxyState) {
                 SnackbarUtils.showTextLong(rootViewGroup, R.string.main_restart_proxy_service_tip);
             }
+        } else if (VPN_REQUEST_CODE == requestCode && RESULT_OK == resultCode) {
+            ProxyHelper.startProxyService(getApplicationContext());
         }
     }
 
@@ -470,15 +526,26 @@ public class MainActivity extends AppCompatActivity implements TrojanConnection.
                 testConnection();
                 return true;
             case R.id.action_show_develop_info_logcat:
-                util.Util.logGoRoutineCount();
-                util.Util.logGoroutineStackTrace();
+                // log of this process
+                LogHelper.showDevelopInfoInLogcat();
+                // log of other processes
+                showDevelopInfoInLogcat();
                 return true;
             case R.id.action_view_server_list:
                 clearEditTextFocus();
                 startActivityForResult(ServerListActivity.create(MainActivity.this), SERVER_LIST_CHOOSE_REQUEST_CODE);
                 return true;
             case R.id.action_exempt_app:
-                startActivityForResult(ExemptAppActivity.create(this), EXEMPT_APP_CONFIGURE_REQUEST_CODE);
+                if (PermissionUtils.hasReadWriteExtStoragePermission(this)) {
+                    startActivityForResult(ExemptAppActivity.create(this), EXEMPT_APP_CONFIGURE_REQUEST_CODE);
+                } else {
+                    if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE}, READ_WRITE_EXT_STORAGE_PERMISSION_REQUEST);
+                    } else {
+                        SnackbarUtils.showTextLong(rootViewGroup, R.string.main_exempt_feature_permission_requirement);
+                    }
+                }
                 return true;
             default:
                 // Invoke the superclass to handle it.
@@ -504,6 +571,7 @@ public class MainActivity extends AppCompatActivity implements TrojanConnection.
                     passwordText.setText(ins.getPassword());
                     ipv6Switch.setChecked(ins.getEnableIpv6());
                     verifySwitch.setChecked(ins.getVerifyCert());
+                    remoteAddrText.setSelection(remoteAddrText.length());
                 }
             } catch (Exception e) {
                 e.printStackTrace();

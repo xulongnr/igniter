@@ -1,18 +1,20 @@
 package io.github.trojan_gfw.igniter.tile;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.RemoteException;
 import android.service.quicksettings.Tile;
 import android.service.quicksettings.TileService;
-import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import io.github.trojan_gfw.igniter.LogHelper;
 import io.github.trojan_gfw.igniter.MainActivity;
 import io.github.trojan_gfw.igniter.ProxyService;
-import io.github.trojan_gfw.igniter.R;
-import io.github.trojan_gfw.igniter.common.os.MultiProcessSP;
+import io.github.trojan_gfw.igniter.common.constants.Constants;
+import io.github.trojan_gfw.igniter.common.utils.PreferenceUtils;
 import io.github.trojan_gfw.igniter.connection.TrojanConnection;
 import io.github.trojan_gfw.igniter.proxy.aidl.ITrojanService;
 
@@ -94,23 +96,15 @@ public class IgniterTileService extends TileService implements TrojanConnection.
         switch (state) {
             case ProxyService.STATE_NONE:
                 tile.setState(Tile.STATE_INACTIVE);
-                tile.setLabel(getString(R.string.app_name));
+                break;
+            case ProxyService.STOPPED:
                 break;
             case ProxyService.STARTED:
                 tile.setState(Tile.STATE_ACTIVE);
-                tile.setLabel(getString(R.string.tile_on));
                 break;
             case ProxyService.STARTING:
-                tile.setState(Tile.STATE_ACTIVE);
-                tile.setLabel(getString(R.string.tile_starting));
-                break;
-            case ProxyService.STOPPED:
-                tile.setState(Tile.STATE_INACTIVE);
-                tile.setLabel(getString(R.string.tile_off));
-                break;
             case ProxyService.STOPPING:
-                tile.setState(Tile.STATE_INACTIVE);
-                tile.setLabel(getString(R.string.tile_stopping));
+                tile.setState(Tile.STATE_UNAVAILABLE);
                 break;
             default:
                 LogHelper.e(TAG, "Unknown state: " + state);
@@ -119,11 +113,16 @@ public class IgniterTileService extends TileService implements TrojanConnection.
         tile.updateTile();
     }
 
+    private boolean isFirstStart() {
+        return PreferenceUtils.getBooleanPreference(getContentResolver(), Uri.parse(Constants.PREFERENCE_URI),
+                Constants.PREFERENCE_KEY_FIRST_START, true);
+    }
+
     @Override
     public void onClick() {
         super.onClick();
         LogHelper.i(TAG, "onClick");
-        if (MultiProcessSP.isFirstStart(true)) {
+        if (isFirstStart()) {
             // if user never open Igniter before, when he/she clicks the tile, it is necessary
             // to start the launcher activity for resource preparation.
             Intent intent = new Intent(this, MainActivity.class);
@@ -134,9 +133,11 @@ public class IgniterTileService extends TileService implements TrojanConnection.
         ITrojanService service = mConnection.getService();
         if (service == null) {
             mTapPending = true;
+            updateTile(ProxyService.STARTING);
         } else {
             try {
                 @ProxyService.ProxyState int state = service.getState();
+                updateTile(state);
                 switch (state) {
                     case ProxyService.STARTED:
                         stopProxyService();

@@ -11,26 +11,29 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.net.VpnService;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
-import android.support.annotation.IntDef;
-import android.support.v4.app.NotificationCompat;
+
+import androidx.annotation.IntDef;
+import androidx.core.app.NotificationCompat;
 
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 import clash.Clash;
 import freeport.Freeport;
+import io.github.trojan_gfw.igniter.common.constants.Constants;
 import io.github.trojan_gfw.igniter.common.utils.PermissionUtils;
+import io.github.trojan_gfw.igniter.common.utils.PreferenceUtils;
 import io.github.trojan_gfw.igniter.connection.TestConnection;
 import io.github.trojan_gfw.igniter.exempt.data.ExemptAppDataManager;
 import io.github.trojan_gfw.igniter.exempt.data.ExemptAppDataSource;
@@ -65,7 +68,6 @@ public class ProxyService extends VpnService implements TestConnection.OnResultL
     public static final int STARTED = 1;
     public static final int STOPPING = 2;
     public static final int STOPPED = 3;
-    public static final String CLASH_EXTRA_NAME = "enable_clash";
     public static final int IGNITER_STATUS_NOTIFY_MSG_ID = 114514;
     public long tun2socksPort;
     public boolean enable_clash = false;
@@ -230,7 +232,7 @@ public class ProxyService extends VpnService implements TestConnection.OnResultL
         openMainActivityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingOpenMainActivityIntent = PendingIntent.getActivity(this, 0, openMainActivityIntent, 0);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setSmallIcon(R.drawable.ic_tile)
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
                 .setContentTitle(getString(R.string.app_name))
                 .setContentText(getString(R.string.notification_starting_service))
@@ -248,6 +250,11 @@ public class ProxyService extends VpnService implements TestConnection.OnResultL
         createNotificationChannel(channelId);
         LogHelper.i(TAG, "start foreground notification");
         startForeground(IGNITER_STATUS_NOTIFY_MSG_ID, builder.build());
+    }
+
+    private boolean readClashPreference() {
+        return PreferenceUtils.getBooleanPreference(getContentResolver(), Uri.parse(Constants.PREFERENCE_URI),
+                Constants.PREFERENCE_KEY_ENABLE_CLASH, true);
     }
 
     @Override
@@ -277,7 +284,8 @@ public class ProxyService extends VpnService implements TestConnection.OnResultL
                 e.printStackTrace();
             }
         }
-        enable_clash = intent.getBooleanExtra(CLASH_EXTRA_NAME, true);
+        enable_clash = readClashPreference();
+        LogHelper.e(TAG, "enable_clash: " + enable_clash);
         boolean enable_ipv6 = false;
 
         File file = new File(getFilesDir(), "config.json");
@@ -383,29 +391,16 @@ public class ProxyService extends VpnService implements TestConnection.OnResultL
         Tun2socks.start(tun2socksStartOptions);
         LogHelper.i(TAG, tun2socksStartOptions.toString());
 
-        StringBuilder runningStatusStringBuilder = new StringBuilder();
-        runningStatusStringBuilder.append("Trojan SOCKS5 port: ")
-                .append(trojanPort)
-                .append("\n")
-                .append("Tun2socks port: ")
-                .append(tun2socksPort)
-                .append("\n");
-        if (enable_clash) {
-            runningStatusStringBuilder.append("Clash SOCKS listen port: ")
-                    .append(clashSocksPort)
-                    .append("\n");
-        }
-
         setState(STARTED);
 
         Intent openMainActivityIntent = new Intent(this, MainActivity.class);
         openMainActivityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingOpenMainActivityIntent = PendingIntent.getActivity(this, 0, openMainActivityIntent, 0);
-        String igniterRunningStatusStr = runningStatusStringBuilder.toString();
+        String igniterRunningStatusStr = "listening on port: " + tun2socksPort;
         final String channelId = getString(R.string.notification_channel_id);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentTitle("Igniter is running")
+                .setSmallIcon(R.drawable.ic_tile)
+                .setContentTitle("Igniter Active")
                 .setContentText(igniterRunningStatusStr)
                 .setStyle(new NotificationCompat.BigTextStyle()
                         .bigText(igniterRunningStatusStr))
